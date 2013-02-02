@@ -4,4 +4,8 @@ class Congressperson < ActiveRecord::Base
   has_many :parties, :through => :party_attendances
   has_many :missed_votes
   belongs_to :state
+
+  def pronoun
+    self.gender == "F" ? "she" : "he"
+  end
 end

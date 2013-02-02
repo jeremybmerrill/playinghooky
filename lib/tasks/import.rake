@@ -17,6 +17,7 @@ namespace :import do
         p.postponed = csv_party["Postponed"]
         puts (p.host || p.venue_name || p.entertainment || p.beneficiary || "") + " added."
         p.save
+        puts ("edited party " +  csv_party["key"]) if csv_party["key"].to_i % 100 == 0
       else
         p = Party.new
         puts ("Party" + csv_party["key"]) if csv_party["key"].to_i % 100 == 0
@@ -46,15 +47,27 @@ namespace :import do
 
   task :congresspeople_current_only => :environment do
     require 'yaml'
+    #strangely, not all congresspeople are in the historical file.
+    #so, I've used this to make sure I have entries on all of the current ones.
     congresspeople_yaml = YAML.load(open("#{Rails.root}/lib/assets/legislators-current.yaml"))
     congresspeople_yaml.each do |congressperson|
-      c = Congressperson.new
-      c.name = congressperson["name"]["first"] + " " + congressperson["name"]["last"]
-      c.party = congressperson["terms"][-1]["party"]
-      c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
-      c.govtrack_id = congressperson["id"]["govtrack"]
-      c.crp_id = congressperson["id"]["opensecrets"]
-      c.save
+      next if Time.parse(congressperson["terms"][-1]["start"]) < Time.utc("2008-1-1")
+      if c = Congressperson.find_by_govtrack_id(congressperson["id"]["govtrack"])
+        c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
+        raise UhOhException if c.state.nil?
+        c.gender = congressperson["bio"]["gender"]
+        c.save
+        puts "edited " + c.name + ": " + congressperson["terms"][-1]["state"]
+      else
+        c = Congressperson.new
+        c.name = congressperson["name"]["first"] + " " + congressperson["name"]["last"]
+        c.gender = congressperson["bio"]["gender"]
+        c.party = congressperson["terms"][-1]["party"]
+        c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
+        c.govtrack_id = congressperson["id"]["govtrack"]
+        c.crp_id = congressperson["id"]["opensecrets"]
+        c.save
+      end
     end
   end
 
@@ -62,15 +75,24 @@ namespace :import do
     require 'yaml'
     congresspeople_yaml = YAML.load(open("#{Rails.root}/lib/assets/legislators-historical.yaml"))
     congresspeople_yaml.each do |congressperson|
-      next if Time.parse(congressperson["terms"][-1]["start"]) < Time.utc("2008-1-1") || Congressperson.find_by_govtrack_id(congressperson["id"]["govtrack"])
-      c = Congressperson.new
-      c.name = congressperson["name"]["first"] + " " + congressperson["name"]["last"]
-      c.party = congressperson["terms"][-1]["party"]
-      c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
-      c.govtrack_id = congressperson["id"]["govtrack"]
-      c.crp_id = congressperson["id"]["opensecrets"]
-      c.save
-      puts "added " + c.name
+      next if Time.parse(congressperson["terms"][-1]["start"]) < Time.utc("2008-1-1")
+      if c = Congressperson.find_by_govtrack_id(congressperson["id"]["govtrack"])
+        c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
+        c.gender = congressperson["bio"]["gender"]
+        raise UhOhException if c.state.nil?
+        c.save
+        puts "edited " + c.name + ": " + congressperson["terms"][-1]["state"]
+      else
+        c = Congressperson.new
+        c.name = congressperson["name"]["first"] + " " + congressperson["name"]["last"]
+        c.party = congressperson["terms"][-1]["party"]
+        c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
+        c.gender = congressperson["bio"]["gender"]
+        c.govtrack_id = congressperson["id"]["govtrack"]
+        c.crp_id = congressperson["id"]["opensecrets"]
+        c.save
+        puts "added " + c.name
+      end
     end
   end
 
@@ -78,10 +100,10 @@ namespace :import do
   task :states => :environment do
     require 'yaml'
     states_yaml = YAML.load(open("#{Rails.root}/lib/assets/states.yml"))
-    states_yaml.each do |trash, s|
+    states_yaml.each do |trash, state|
       s = State.new
-      s.abbrev = s["abbreviation"]
-      s.name = s["name"]
+      s.abbrev = state["abbreviation"]
+      s.name = state["name"]
       s.save
     end
   end
@@ -168,7 +190,6 @@ namespace :import do
       # rails g model FullVote missed_vote_id:integer category_label:string result:string link;string congress:integer status:string number:string title:string thomas_link:string
     end
   end
-
 end
 
 

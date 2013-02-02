@@ -1,16 +1,35 @@
 <h1>Who's Playing Hooky?</h1>
 <span class="byline">by Jeremy B. Merrill</span>
-<p>A lede will eventually appear here.</p>
+<p>A thoughtful, yet compelling, lede will eventually appear here.</p>
 <ul>
   <% @absences.each do |absence| %>
-    <strong><%= absence.missed_vote.congressperson.name %></strong> missed a <%= absence.missed_vote.full_vote.category_label || "CATEGORY" %> vote on <strong><%= absence.missed_vote.full_vote.title || "TITLE"%></strong> because they were partying <%= absence.party.short_description %>. <a href="#" id="more-info-btn-<%= absence.id %>">More info</a>
-    <span id="more-info-<%= absence.id %>">
-      According to the <a href="#">invitation</a>, the party<%= ", hosted by #{absence.party.pretty_host}," %> <%= "benefited #{absence.party.beneficiary} and " %>was held at VENUE NAME in VENUE_CITY, VENUE_STATE. ENTERTAINMENT performed at the event. 
-      <a href="<%= absence.missed_vote.full_vote.thomas_link %>">Vote info on Thomas</a>
+    <li>
+    <strong><%= absence.missed_vote.congressperson.name %></strong> (<%= absence.missed_vote.congressperson.party[0] %>-<%= absence.missed_vote.congressperson.state.abbrev %>) appears to have missed a <%= absence.missed_vote.full_vote.category_label %> vote on <strong><%= absence.missed_vote.full_vote.title.gsub(/\.$/, "")%></strong> because <%= absence.missed_vote.congressperson.pronoun %> was partying<%= absence.party.short_description %>. <a href="#" class="more-info-btn" id="more-info-btn-<%= absence.id %>">More info</a>
+    <span id="more-info-<%= absence.id %>" style="display: none;">
+      According to the <a href="#">invitation</a>, the party<%= ", hosted by #{absence.party.pretty_host}," %> <%= "benefited #{absence.party.beneficiary} and " %>was held at VENUE NAME in VENUE_CITY, VENUE_STATE. ENTERTAINMENT performed at the event.
+      Despite <%= absence.missed_vote.congressperson.name %>'s absence, the vote FAILED/SUCCEEDED. The underlying bill, UNDERLYING_BILL_NAME, ENDED UP PASSING/DIDN'T END UP PASSING.
+      <a href="<%= absence.missed_vote.full_vote.thomas_link %>">Vote info on Thomas</a> | <a href="#">Hide</a>
     </span>
   <% end %>
+  </li>
 </ul>
 
 <h3>about <em>Who's Playing Hooky?</em></h3>
 <p><em>Who's Playing Hooky</em> is a data reporting project built by Jeremy B. Merrill at the February 2013 Bicoastal Datafest at Columbia and Stanford Universities. The data is drawn from Sunlight Foundation's <a href="http://politicalpartytime.org/">Political Party Time</a> database and <a href="http://govtrack.us">GovTrack.us</a>'s Congress API.</p>
 <p><strong>Important Caveat:</strong>Just because a congressperson appears here doesn't guarantee that they truly missed a vote because they were partying. Additional reporting is necessary; all that the data guarantees is that the congressperson missed a vote and that they were listed as <em>planning to attend</em> a party at the same time as they vote.</p>
+
+<script type="text/javascript">
+if(!Array.prototype.last) {
+    Array.prototype.last = function() {
+        return this[this.length - 1];
+    }
+}
+
+$(document).ready(function(){
+  $('a.more-info-btn').click(function(e){
+    var absence_id = e.target.id.split("-").last();
+    $(e.target).hide();
+    $('#more-info-' + absence_id).show();
+  });
+});
+</script>

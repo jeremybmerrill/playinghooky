@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130202221150) do
+ActiveRecord::Schema.define(:version => 20130202234320) do
 
   create_table "absences", :force => true do |t|
     t.integer  "missed_vote_id"
@@ -29,6 +29,7 @@ ActiveRecord::Schema.define(:version => 20130202221150) do
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
     t.integer  "govtrack_id"
+    t.string   "gender"
   end
 
   add_index "congresspeople", ["crp_id"], :name => "index_congresspeople_on_crp_id"
@@ -42,7 +43,7 @@ ActiveRecord::Schema.define(:version => 20130202221150) do
     t.integer  "congress"
     t.string   "status"
     t.string   "number"
-    t.string   "title"
+    t.text     "title"
     t.string   "thomas_link"
     t.datetime "created_at",     :null => false
     t.datetime "updated_at",     :null => false
