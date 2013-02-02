@@ -1,0 +1,23 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  missed_vote_id: 1
+  category_label: MyString
+  result: MyString
+  link: MyString
+  congress: 1
+  status: MyString
+  number: MyString
+  title: MyString
+  thomas_link: MyString
+
+two:
+  missed_vote_id: 1
+  category_label: MyString
+  result: MyString
+  link: MyString
+  congress: 1
+  status: MyString
+  number: MyString
+  title: MyString
+  thomas_link: MyString

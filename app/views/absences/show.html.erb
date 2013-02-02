@@ -1,0 +1,15 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Missed vote:</b>
+  <%= @absence.missed_vote_id %>
+</p>
+
+<p>
+  <b>Party:</b>
+  <%= @absence.party_id %>
+</p>
+
+
+<%= link_to 'Edit', edit_absence_path(@absence) %> |
+<%= link_to 'Back', absences_path %>

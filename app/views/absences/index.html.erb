@@ -1,0 +1,16 @@
+<h1>Who's Playing Hooky?</h1>
+<span class="byline">by Jeremy B. Merrill</span>
+<p>A lede will eventually appear here.</p>
+<ul>
+  <% @absences.each do |absence| %>
+    <strong><%= absence.missed_vote.congressperson.name %></strong> missed a <%= absence.missed_vote.full_vote.category_label || "CATEGORY" %> vote on <strong><%= absence.missed_vote.full_vote.title || "TITLE"%></strong> because they were partying <%= absence.party.short_description %>. <a href="#" id="more-info-btn-<%= absence.id %>">More info</a>
+    <span id="more-info-<%= absence.id %>">
+      According to the <a href="#">invitation</a>, the party<%= ", hosted by #{absence.party.pretty_host}," %> <%= "benefited #{absence.party.beneficiary} and " %>was held at VENUE NAME in VENUE_CITY, VENUE_STATE. ENTERTAINMENT performed at the event. 
+      <a href="<%= absence.missed_vote.full_vote.thomas_link %>">Vote info on Thomas</a>
+    </span>
+  <% end %>
+</ul>
+
+<h3>about <em>Who's Playing Hooky?</em></h3>
+<p><em>Who's Playing Hooky</em> is a data reporting project built by Jeremy B. Merrill at the February 2013 Bicoastal Datafest at Columbia and Stanford Universities. The data is drawn from Sunlight Foundation's <a href="http://politicalpartytime.org/">Political Party Time</a> database and <a href="http://govtrack.us">GovTrack.us</a>'s Congress API.</p>
+<p><strong>Important Caveat:</strong>Just because a congressperson appears here doesn't guarantee that they truly missed a vote because they were partying. Additional reporting is necessary; all that the data guarantees is that the congressperson missed a vote and that they were listed as <em>planning to attend</em> a party at the same time as they vote.</p>

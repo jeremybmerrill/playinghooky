@@ -1,0 +1,15 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  start: 2013-02-02 11:05:02
+  end: 2013-02-02 11:05:02
+  venue_city: MyString
+  venue_state: MyString
+  venue_zip: MyString
+
+two:
+  start: 2013-02-02 11:05:02
+  end: 2013-02-02 11:05:02
+  venue_city: MyString
+  venue_state: MyString
+  venue_zip: MyString

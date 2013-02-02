@@ -1,0 +1,9 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  missed_vote_id: 1
+  party_id: 1
+
+two:
+  missed_vote_id: 1
+  party_id: 1

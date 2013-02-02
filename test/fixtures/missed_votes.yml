@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  congressperson_id: 1
+  govtrack_vote_id: 1
+  govtrack_resource_id: 1
+  created: 2013-02-02 13:53:41
+
+two:
+  congressperson_id: 1
+  govtrack_vote_id: 1
+  govtrack_resource_id: 1
+  created: 2013-02-02 13:53:41
