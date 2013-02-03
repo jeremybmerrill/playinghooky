@@ -1,3 +1,38 @@
 // Place all the styles related to the Absences controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+div#content{
+  width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+
+  article{
+    width: 600px;
+  }
+
+  span.byline{
+    font-size: 12px;
+    margin-left: 10px;
+  }
+
+  p, ul, .byline{
+    font-size: 14px;
+    font-family: "Open Sans", sans-serif;
+    line-height: 1.3em;
+  }
+
+  p.about{
+    font-size: 12px;
+  }
+
+  h1{
+    font-family: "Vollkorn", serif;
+  }
+  a{
+    color: blue;
+  }
+  a.btn:visited, a.btn:active, a.btn:link{
+    color: blue;
+  }
+}

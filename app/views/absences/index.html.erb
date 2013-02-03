@@ -1,23 +1,30 @@
-<h1>Who's Playing Hooky?</h1>
+<h1>Who's Playing Hooky? <%= to_word(@absences.map{|a| a.missed_vote.congressperson }.uniq.count).titleize %> Congresspeople Did.</h1>
+<br />
+<h1>http://bit.ly/whosplayinghooky</h1>
 <span class="byline">by Jeremy B. Merrill</span>
-<p>A thoughtful, yet compelling, lede will eventually appear here.</p>
+<article>
+<p>The official job duties of a U.S. Senator or Congressperson are light compared to most American workers. For instance, Congress often adjourns for a long weekend&mdash;even, for instance, while party leaders were <a href="http://politicalticker.blogs.cnn.com/2012/12/05/lawmakers-long-weekend/">negotiating a solution to the debt ceiling</a>  in early December of last year. Despite their light official workload, some members of Congress still manage to miss votes.</p>
+<p>According to an analysis performed here, in at least <%= to_word(@absences.count) %> instances, a member of Congress missed a vote at the same time as he or she was scheduled to be attending a party.</p>
+<p>Unlike many American workers, the calendars of members of Congress are usually full of their unofficial duties, like meeting leaders in their state or district and raising money. Their glad-handing and networking with the rich and well-connected don't serve only to secure their re-election, but also practically guarantee a high-paying job if the retire or get voted out. Former Senator Chris Dodd (D-CT), who now leads the Motion Picture Association of America, and former Representative Billy Tauzin (R-LA), who <a href="http://www.nytimes.com/2010/02/13/health/policy/13pharm.html?_r=0">previously led the Pharmaceutical Research and Manufacturers of America</a> are by no means the only lobbyists-n&eacute;e-members-of-congress; a <a href="http://talkingpointsmemo.com/interactive/2011/06/shadow-congress-2011-update.php">2011 analysis by Talking Points Memo</a> found almost 200.</p>
+<p>Occasionally members' social and financial calendar interferes with Congress's official one. This analysis matched votes that lawmakers missed with party invitations collected by the non-partisan transparency organization Sunlight Foundation. In most cases, the missed votes were procedural votes or largely-uncontentious votes on Congressional proclamations. However, Rep. Sanford Bishop (D-GA) and Rep. Joe Barton (R-TX) both missed votes on amendments to appropriations bills.</p>
+
 <ul>
   <% @absences.each do |absence| %>
     <li>
-    <strong><%= absence.missed_vote.congressperson.name %></strong> (<%= absence.missed_vote.congressperson.party[0] %>-<%= absence.missed_vote.congressperson.state.abbrev %>) appears to have missed a <%= absence.missed_vote.full_vote.category_label %> vote on <strong><%= absence.missed_vote.full_vote.title.gsub(/\.$/, "")%></strong> because <%= absence.missed_vote.congressperson.pronoun %> was partying<%= absence.party.short_description %>. <a href="#" class="more-info-btn" id="more-info-btn-<%= absence.id %>">More info</a>
+    <strong><%= absence.missed_vote.congressperson.chamber == "House" ? "Rep." : "Sen." %> <%= absence.missed_vote.congressperson.name %></strong> (<%= absence.missed_vote.congressperson.party[0] %>-<%= absence.missed_vote.congressperson.state.abbrev %>) missed a <%= absence.missed_vote.full_vote.category_label %> vote on <strong><%= absence.missed_vote.full_vote.title.gsub(/\.$/, "")%></strong> on <%= absence.missed_vote.vote_time.to_date.to_formatted_s(:long) %> at <%= absence.missed_vote.vote_time.in_time_zone("Eastern Time (US & Canada)").strftime("%l:%M %p") %> while <%= absence.missed_vote.congressperson.pronoun %> was scheduled as partying <%= absence.party.short_description %>. <br /><a href="#" class="more-info-btn btn" id="more-info-btn-<%= absence.id %>">More info</a>
     <span id="more-info-<%= absence.id %>" style="display: none;">
-      According to the <a href="#">invitation</a>, the party<%= ", hosted by #{absence.party.pretty_host}," %> <%= "benefited #{absence.party.beneficiary} and " %>was held at VENUE NAME in VENUE_CITY, VENUE_STATE. ENTERTAINMENT performed at the event.
-      Despite <%= absence.missed_vote.congressperson.name %>'s absence, the vote FAILED/SUCCEEDED. The underlying bill, UNDERLYING_BILL_NAME, ENDED UP PASSING/DIDN'T END UP PASSING.
-      <a href="<%= absence.missed_vote.full_vote.thomas_link %>">Vote info on Thomas</a> | <a href="#">Hide</a>
+      According to the <a href="http://politicalpartytime.org/party/<%= absence.party.sunlight_key %>">invitation</a>, the party<%= ", hosted by #{absence.party.pretty_host}," unless absence.party.host.nil? %> <%= "benefited #{absence.party.pretty_beneficiary} and " %>was held<%= " at #{absence.party.venue_name}" if absence.party.venue_name %><%= " in #{absence.party.venue_city}, #{absence.party.venue_state}" if absence.party.venue_city && absence.party.venue_state %>. <%= "Entertainment at the event was listed as \"#{absence.party.entertainment}.\"" if absence.party.entertainment %>
+      Despite <%= absence.missed_vote.congressperson.name %>'s absence, the <%= absence.missed_vote.congressperson.chamber %> <%= absence.missed_vote.full_vote.passed? ? "passed" : "rejected" %> the motion. The underlying bill<%= absence.missed_vote.full_vote.passed? == absence.missed_vote.full_vote.underlying_bill_passed? ? " also" : ", however," %> <%= absence.missed_vote.full_vote.underlying_bill_passed? ? "ended up passing" : "didn't end up passing" %>.<br />
+      <a href="<%= absence.missed_vote.full_vote.thomas_link %>">Vote info on Thomas</a> | <a href="#" class="hide-more-info-btn btn">Hide</a>
     </span>
   <% end %>
   </li>
 </ul>
+<p>Just because a congressperson appears here doesn't guarantee that they missed a vote because they were partying. Additional reporting is necessary; all that the data guarantees is that the congressperson missed a vote and that they were listed as <em>planning to attend</em> a party at the same time as they vote. Conversely, a congressperson's absence from this list does not mean that they have never been at a party when a vote was held. <em>Political Party Time</em> depends on volunteers to submit party invitations, so its list is necessarily incomplete.</p>
 
 <h3>about <em>Who's Playing Hooky?</em></h3>
-<p><em>Who's Playing Hooky</em> is a data reporting project built by Jeremy B. Merrill at the February 2013 Bicoastal Datafest at Columbia and Stanford Universities. The data is drawn from Sunlight Foundation's <a href="http://politicalpartytime.org/">Political Party Time</a> database and <a href="http://govtrack.us">GovTrack.us</a>'s Congress API.</p>
-<p><strong>Important Caveat:</strong>Just because a congressperson appears here doesn't guarantee that they truly missed a vote because they were partying. Additional reporting is necessary; all that the data guarantees is that the congressperson missed a vote and that they were listed as <em>planning to attend</em> a party at the same time as they vote.</p>
-
+<p class="about"><em>Who's Playing Hooky</em> is a data reporting project built by Jeremy B. Merrill at the February 2013 Bicoastal Datafest at Columbia and Stanford Universities. The data is drawn from Sunlight Foundation's <a href="http://politicalpartytime.org/">Political Party Time</a> database and <a href="http://govtrack.us">GovTrack.us</a>'s Congress API.</p>
+</article>
 <script type="text/javascript">
 if(!Array.prototype.last) {
     Array.prototype.last = function() {
@@ -30,6 +37,14 @@ $(document).ready(function(){
     var absence_id = e.target.id.split("-").last();
     $(e.target).hide();
     $('#more-info-' + absence_id).show();
+    return false;
+  });
+  $('a.hide-more-info-btn').click(function(e){
+    $(e.target).parent().hide();
+    $(e.target).parent().parent().find("a.more-info-btn").show();
+    return false;
   });
 });
 </script>
+
+<!--  #TODO add google analytics -->

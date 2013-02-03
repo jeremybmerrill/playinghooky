@@ -2,7 +2,7 @@ class AbsencesController < ApplicationController
   # GET /absences
   # GET /absences.json
   def index
-    @absences = Absence.all
+    @absences = Absence.where(:strict => true).sort_by{|a| a.missed_vote.vote_time }.reverse
 
     respond_to do |format|
       format.html # index.html.erb
@@ -20,7 +20,7 @@ class AbsencesController < ApplicationController
       format.json { render json: @absence }
     end
   end
-
+=begin
   # GET /absences/new
   # GET /absences/new.json
   def new
@@ -80,4 +80,5 @@ class AbsencesController < ApplicationController
       format.json { head :no_content }
     end
   end
+=end
 end

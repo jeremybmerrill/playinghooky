@@ -54,15 +54,18 @@ namespace :import do
       next if Time.parse(congressperson["terms"][-1]["start"]) < Time.utc("2008-1-1")
       if c = Congressperson.find_by_govtrack_id(congressperson["id"]["govtrack"])
         c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
+        c.chamber = congressperson["terms"][-1]["type"] == "rep" ? "House" : "Senate"
+        c.name = congressperson["name"]["official_full"]
         raise UhOhException if c.state.nil?
         c.gender = congressperson["bio"]["gender"]
         c.save
         puts "edited " + c.name + ": " + congressperson["terms"][-1]["state"]
       else
         c = Congressperson.new
-        c.name = congressperson["name"]["first"] + " " + congressperson["name"]["last"]
+        c.name = congressperson["name"]["official_full"]
         c.gender = congressperson["bio"]["gender"]
         c.party = congressperson["terms"][-1]["party"]
+        c.chamber = congressperson["terms"][-1]["type"] == "rep" ? "House" : "Senate"
         c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
         c.govtrack_id = congressperson["id"]["govtrack"]
         c.crp_id = congressperson["id"]["opensecrets"]
@@ -78,15 +81,18 @@ namespace :import do
       next if Time.parse(congressperson["terms"][-1]["start"]) < Time.utc("2008-1-1")
       if c = Congressperson.find_by_govtrack_id(congressperson["id"]["govtrack"])
         c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
+        c.name = (congressperson["name"]["nickname"] || congressperson["name"]["first"]) + " " + congressperson["name"]["last"]
         c.gender = congressperson["bio"]["gender"]
+        c.chamber = congressperson["terms"][-1]["type"] == "rep" ? "House" : "Senate"
         raise UhOhException if c.state.nil?
         c.save
         puts "edited " + c.name + ": " + congressperson["terms"][-1]["state"]
       else
         c = Congressperson.new
-        c.name = congressperson["name"]["first"] + " " + congressperson["name"]["last"]
+        c.name = (congressperson["name"]["nickname"] || congressperson["name"]["first"]) + " " + congressperson["name"]["last"]
         c.party = congressperson["terms"][-1]["party"]
         c.state = State.find_by_abbrev(congressperson["terms"][-1]["state"])
+        c.chamber = congressperson["terms"][-1]["type"] == "rep" ? "House" : "Senate"
         c.gender = congressperson["bio"]["gender"]
         c.govtrack_id = congressperson["id"]["govtrack"]
         c.crp_id = congressperson["id"]["opensecrets"]
@@ -111,20 +117,23 @@ namespace :import do
   task :missed_votes => :environment do
     require 'json'
     require 'restclient'
-    query_string = "http://www.govtrack.us/api/v1/vote_voter/?person=GOVTRACKID&option=0&limit=1000&order_by=vote_time&format=json"
+    query_string = "http://www.govtrack.us/api/v1/vote_voter/?person=GOVTRACKID&option=0&limit=1000&order_by=created&format=json"
     Congressperson.all.each_with_index do |congressperson, index|
+      next if congressperson.missed_votes.size != 0
+      puts query_string.gsub("GOVTRACKID", congressperson.govtrack_id.to_s )
       json_resp = RestClient.get(query_string.gsub("GOVTRACKID", congressperson.govtrack_id.to_s ), :accept => :json)
       missed_votes = JSON.load(json_resp)
-      puts index + ". " + congressperson.name + ": " + missed_votes["meta"]["total_count"].to_s
+      puts index.to_s + ". " + congressperson.name + ": " + missed_votes["meta"]["total_count"].to_s
       missed_votes["objects"].each do |m|
-        next if Time.parse(m["vote_time"]) < Time.utc("2008-1-1") #skip votes older than the party db
+        next if Time.parse(m["created"]) < Time.utc("2008-1-1") #skip votes older than the party db
         missed_vote = MissedVote.new
         missed_vote.congressperson = congressperson
-        missed_vote.vote_time = Time.parse(m["vote_time"])
+        missed_vote.vote_time = Time.parse(m["created"])
         missed_vote.govtrack_resource_id = m["id"]
         missed_vote.govtrack_vote_id = m["vote"].split("/")[-1]
         missed_vote.save
       end
+      #sleep(1)
     end
   end
 
@@ -148,20 +157,32 @@ namespace :import do
           elsif missed_vote.vote_time > (party.end.nil? ? party.start.end_of_day : party.end)
             #skip if the vote happened on a day after the party ended
             next
-          elsif missed_vote.vote_time >= party.start && (party.start.nil? || missed_vote.vote_time <= party.start)
+          # elsif missed_vote.vote_time >= party.start && missed_vote.vote_time.beginning_of_day == party.start.beginning_of_day && party.end.nil?
+          #   next unless Absence.find_by_missed_vote_id(missed_vote.id).nil? || !Absence.find_by_missed_vote_id(missed_vote.id).strict
+          #   a = Absence.new
+          #   a.party = party
+          #   a.missed_vote = missed_vote
+          #   a.strict = false
+          #   a.save
+          #   puts congressperson.name + " played hooky!"
+          #   next
+          elsif missed_vote.vote_time >= party.start && missed_vote.vote_time.beginning_of_day == party.start.beginning_of_day && missed_vote.vote_time <= party.end
+            next unless Absence.find_by_missed_vote_id(missed_vote.id).nil? || !Absence.find_by_missed_vote_id(missed_vote.id).strict
             a = Absence.new
             a.party = party
             a.missed_vote = missed_vote
             a.strict = true
             a.save
-            puts congressperson.name + " played hooky!"
-          elsif missed_vote.vote_time.beginning_of_day >= party.start && (party.start.nil? || missed_vote.vote_time.end_of_day <= party.start)
-            a = Absence.new
-            a.party = party
-            a.missed_vote = missed_vote
-            a.strict = false
-            a.save
-            puts congressperson.name + " played hooky!"
+            puts congressperson.name + " strictly played hooky!"
+            next
+          # elsif missed_vote.vote_time.beginning_of_day >= party.start && missed_vote.vote_time.beginning_of_day == party.start.beginning_of_day && (party.end.nil? || missed_vote.vote_time.end_of_day <= party.end)
+          #   next unless Absence.find_by_missed_vote_id(missed_vote.id).nil?
+          #   a = Absence.new
+          #   a.party = party
+          #   a.missed_vote = missed_vote
+          #   a.strict = false
+          #   a.save
+          #   puts congressperson.name + " played hooky!"
           end
         end
       end
@@ -181,10 +202,15 @@ namespace :import do
       v.result = vote_info["result"]
       v.link = vote_info["link"]
       v.congress = vote_info["congress"].to_i
-      v.status = vote_info["related_bill"]["current_status"]
-      v.number = vote_info["related_bill"]["display_number"]
-      v.title = vote_info["related_bill"]["title_without_number"]
-      v.thomas_link = vote_info["related_bill"]["thomas_link"]
+      if vote_info["related_bill"]
+        v.status = vote_info["related_bill"]["current_status"]
+        v.number = vote_info["related_bill"]["display_number"]
+        v.title = vote_info["related_bill"]["title_without_number"]
+        v.thomas_link = vote_info["related_bill"]["thomas_link"]
+      else
+        v.title = vote_info["question"]
+        v.thomas_link = vote_info["source_link"]
+      end
       v.save
       puts v.title
       # rails g model FullVote missed_vote_id:integer category_label:string result:string link;string congress:integer status:string number:string title:string thomas_link:string
@@ -194,7 +220,13 @@ end
 
 
 task :bootstrap do
-  #dl data.
+  `cd lib/assets/`
+  `wget http://politicalpartytime.org/www/partytime_dump_all.csv`
+  `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-current.yaml`
+  `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-historical.yaml`
+  `wget http://www.whattheflux.com/wp-content/uploads/2010/06/states.yml_.zip`
+  `unzip states.yml_.zip`
+  `cd ../..`
   puts "states"
   Rake::Task["import:states"].invoke
   puts "congresscritterz"
