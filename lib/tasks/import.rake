@@ -220,13 +220,13 @@ end
 
 
 task :bootstrap do
-  `cd lib/assets/`
+  Dir.chdir("lib/assets")
   `wget http://politicalpartytime.org/www/partytime_dump_all.csv`
   `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-current.yaml`
   `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-historical.yaml`
   `wget http://www.whattheflux.com/wp-content/uploads/2010/06/states.yml_.zip`
   `unzip states.yml_.zip`
-  `cd ../..`
+  Dir.chdir("../..")
   puts "states"
   Rake::Task["import:states"].invoke
   puts "congresscritterz"
