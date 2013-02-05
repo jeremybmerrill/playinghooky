@@ -154,6 +154,8 @@ namespace :import do
             #skip if the vote happened on a day before the party.
             #ratchet += 1
             next
+          elsif party.end.nil?
+            next
           elsif missed_vote.vote_time > (party.end.nil? ? party.start.end_of_day : party.end)
             #skip if the vote happened on a day after the party ended
             next
@@ -220,13 +222,13 @@ end
 
 
 task :bootstrap do
-  Dir.chdir("lib/assets")
-  `wget http://politicalpartytime.org/www/partytime_dump_all.csv`
-  `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-current.yaml`
-  `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-historical.yaml`
-  `wget http://www.whattheflux.com/wp-content/uploads/2010/06/states.yml_.zip`
-  `unzip states.yml_.zip`
-  Dir.chdir("../..")
+  # Dir.chdir("lib/assets")
+  # `wget http://politicalpartytime.org/www/partytime_dump_all.csv`
+  # `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-current.yaml`
+  # `wget https://raw.github.com/unitedstates/congress-legislators/master/legislators-historical.yaml`
+  # `wget http://www.whattheflux.com/wp-content/uploads/2010/06/states.yml_.zip`
+  # `unzip states.yml_.zip`
+  # Dir.chdir("../..")
   puts "states"
   Rake::Task["import:states"].invoke
   puts "congresscritterz"
